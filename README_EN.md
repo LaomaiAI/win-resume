@@ -1,4 +1,6 @@
-# WinResume - Resume tasks automatically after a Windows Update reboot
+﻿# WinResume - Resume tasks automatically after a Windows Update reboot
+
+Repository: https://github.com/LaomaiAI/win-resume
 
 One-line pain point: an overnight agent task killed by a forced Windows Update reboot, and all you find in the morning is the login screen.
 Install: run `install.ps1` as Administrator, then edit `tasks.json` and enable the tasks you want resumed.

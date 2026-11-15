@@ -1,4 +1,6 @@
-# WinResume - Windows 更新重启后自动续跑任务
+﻿# WinResume - Windows 更新重启后自动续跑任务
+
+仓库：https://github.com/LaomaiAI/win-resume
 
 一句话痛点：通宵挂着的 agent 任务被 Windows 更新强制重启杀掉，一觉醒来只剩登录界面。
 安装：以管理员身份运行 `install.ps1`，再编辑 `tasks.json` 启用要续跑的任务。
