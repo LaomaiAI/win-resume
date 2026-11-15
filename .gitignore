@@ -1,0 +1,10 @@
+# WinResume run-time files (created on the user's machine, never committed)
+win-resume.log
+state.json
+logs/
+state/
+
+# Windows / editor noise
+Thumbs.db
+Desktop.ini
+.vscode/
