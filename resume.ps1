@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
 .SYNOPSIS
     WinResume worker: resume preset tasks after a Windows Update-triggered reboot.
@@ -78,7 +78,10 @@ if (-not $decision.IsUpdateReboot) {
     exit 0
 }
 
-$enabled = Get-EnabledWinResumeTask -Config $config
+# @(): on Windows PowerShell 5.1 a function that outputs one object hands
+# back a scalar, and .Count on a scalar is $null - so without the wrap,
+# the "no enabled tasks" check below would never trigger.
+$enabled = @(Get-EnabledWinResumeTask -Config $config)
 if ($enabled.Count -eq 0) {
     Write-ResumeLog -LogPath $logPath -Message 'Update reboot detected, but no enabled tasks in tasks.json. Nothing to resume.'
     Set-WinResumeState -Path $statePath -LastBootTime $evidence.LastBootTime -LastDecision 'Resumed' -LastReason 'NoEnabledTasks'
@@ -86,7 +89,7 @@ if ($enabled.Count -eq 0) {
 }
 
 Write-ResumeLog -LogPath $logPath -Message "Update reboot detected. Resuming $($enabled.Count) task(s)."
-$results = Start-WinResumeRun -Tasks $enabled -LogPath $logPath
+$results = @(Start-WinResumeRun -Tasks $enabled -LogPath $logPath)
 
 $startedCount = @($results | Where-Object { $_.Started }).Count
 $failedCount = $results.Count - $startedCount

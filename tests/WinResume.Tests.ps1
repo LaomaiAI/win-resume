@@ -96,7 +96,11 @@ Describe 'Get-EnabledWinResumeTask' {
                 [pscustomobject]@{ Name = 'off'; Enabled = $false }
             )
         }
-        $enabled = Get-EnabledWinResumeTask -Config $config
+        # Wrap in @(): a function that outputs one object hands back a
+        # scalar on Windows PowerShell 5.1, where .Count on a scalar is
+        # $null (PowerShell 7 synthesizes .Count = 1). Without the wrap,
+        # this assertion fails on 5.1 even though the function is correct.
+        $enabled = @(Get-EnabledWinResumeTask -Config $config)
         $enabled.Count | Should -Be 1
         $enabled[0].Name | Should -Be 'on'
     }
@@ -278,7 +282,10 @@ Describe 'Start-WinResumeRun' {
         # Platform-aware "good" command: the logic under test (continue
         # after a failure) is the same everywhere; only the executable
         # that is guaranteed to exist differs.
-        if ($IsWindows) {
+        # NOTE: $IsWindows does not exist on Windows PowerShell 5.1 (it
+        # arrived in PowerShell 6), so check the OS platform instead -
+        # the same check the module itself uses.
+        if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
             $goodCommand = $env:ComSpec
             $goodArguments = '/c exit 0'
         }
@@ -298,12 +305,14 @@ Describe 'Start-WinResumeRun' {
             [pscustomobject]@{ Name = 'missing-dir'; Command = $goodCommand; Arguments = $goodArguments; WorkingDirectory = (Join-Path $goodDir 'definitely-missing-dir'); Enabled = $true },
             [pscustomobject]@{ Name = 'also-good'; Command = $goodCommand; Arguments = ''; WorkingDirectory = $goodDir; Enabled = $true }
         )
-        $results = Start-WinResumeRun -Tasks $tasks -LogPath $logPath
+        # @() for the same reason as the Get-EnabledWinResumeTask test:
+        # one output object comes back as a scalar on PowerShell 5.1.
+        $results = @(Start-WinResumeRun -Tasks $tasks -LogPath $logPath)
         $results.Count | Should -Be 4
         ($results | Where-Object Name -eq 'good').Started | Should -BeTrue
         ($results | Where-Object Name -eq 'missing-dir').Started | Should -BeFalse
         ($results | Where-Object Name -eq 'also-good').Started | Should -BeTrue
-        if ($IsWindows) {
+        if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
             # On Windows, Start-Process throws for a missing executable.
             ($results | Where-Object Name -eq 'missing-exe').Started | Should -BeFalse
         }
